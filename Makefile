@@ -5,6 +5,10 @@ transifex_input = $(i18n)/transifex_input.json
 # This directory must match .babelrc .
 transifex_temp = ./temp/babel-plugin-formatjs
 
+publish:
+	npm run build
+	npm publish
+
 build:
 	rm -rf ./dist
 	./node_modules/.bin/fedx-scripts babel src --out-dir dist --source-maps --ignore **/*.test.jsx,**/__mocks__,**/__snapshots__,**/setupTest.js --copy-files
