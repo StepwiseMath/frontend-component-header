@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
@@ -30,6 +30,21 @@ const LearningHeader = ({
   courseOrg, courseNumber, courseTitle, intl, showUserDropdown,
 }) => {
   const { authenticatedUser } = useContext(AppContext);
+
+  // mcdaniel: add the custom css file to the head
+  useEffect(() => {
+    // mount
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://swm-openedx-us-dev-storage.s3.us-east-2.amazonaws.com/static/css/swpwrxblock.css';
+    document.head.appendChild(link);
+
+    // unmount
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
 
   const headerLogo = (
     <LinkedLogo
