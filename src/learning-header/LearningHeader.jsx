@@ -32,11 +32,23 @@ const LearningHeader = ({
   const { authenticatedUser } = useContext(AppContext);
 
   // mcdaniel: add the custom css file to the head
+  // note that STEPWISEMATH_ENV is set in https://github.com/StepwiseMath/tutor-indigo-stepwisemath/blob/open-release/redwood.master/tutorindigo/plugin.py#L110
+  if (!process.env.STEPWISEMATH_ENV) {
+    console.warn('frontend-component-header WARNING: bash variable `STEPWISEMATH_ENV` is not defined. Defaulting to "dev" environment.');
+  } else {
+    const validEnvironments = ['prod', 'staging', 'dev'];
+    if (!validEnvironments.includes(process.env.STEPWISEMATH_ENV)) {
+      console.warn('frontend-component-header WARNING: bash variable `STEPWISEMATH_ENV` value of "', process.env.STEPWISEMATH_ENV, '" is invalid. Valid values are: ', validEnvironments, '. Defaulting to "dev" environment.');
+    }
+  }
+  const environment = process.env.NODE_ENV || 'dev'; 
+  const css_url = `https://swm-openedx-us-${environment}-storage.s3.us-east-2.amazonaws.com/static/css/swpwrxblock.css`;
+  console.log('css_url:', css_url);
   useEffect(() => {
     // mount
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://swm-openedx-us-dev-storage.s3.us-east-2.amazonaws.com/static/css/swpwrxblock.css';
+    link.href = css_url;
     document.head.appendChild(link);
 
     // unmount
