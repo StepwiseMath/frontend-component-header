@@ -1,6 +1,6 @@
 {
   "name": "@stepwisemath/frontend-component-header",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The Stepwise Math header for Open edX forked from @edly-io",
   "main": "dist/index.js",
   "publishConfig": {

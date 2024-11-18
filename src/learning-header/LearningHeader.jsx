@@ -44,6 +44,9 @@ const stepwisemath_environment = () => {
 
     if (xhr.status === 200) {
       const data = JSON.parse(xhr.responseText);
+      if (!data.INDIGO_STEPWISEMATH_ENV) {
+        console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_ENV` is undefined. Defaulting to "prod" environment.');
+      };
       cachedEnvironment = data.INDIGO_STEPWISEMATH_ENV || 'prod';
     } else {
       console.error('Error fetching the URL:', xhr.statusText);
@@ -55,7 +58,7 @@ const stepwisemath_environment = () => {
   }
 
   const validEnvironments = ['prod', 'staging', 'dev'];
-  if (!cachedEnvironment.includes(environment)) {
+  if (!cachedEnvironment.includes(cachedEnvironment)) {
     console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_ENV` value of "', cachedEnvironment, '" is invalid. Valid values are: ', validEnvironments, '. Defaulting to "prod" environment.');
   }
 
@@ -77,6 +80,7 @@ const LearningHeader = ({
     link.rel = 'stylesheet';
     link.href = css_url;
     document.head.appendChild(link);
+    console.info('frontend-component-header: added link to head:', link);
 
     // unmount
     return () => {
