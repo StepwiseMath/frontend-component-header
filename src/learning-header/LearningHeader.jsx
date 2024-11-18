@@ -26,22 +26,49 @@ LinkedLogo.propTypes = {
   alt: PropTypes.string.isRequired,
 };
 
+let cachedEnvironment = null;
+
+const stepwisemath_environment = () => {
+  // mcdaniel: add the custom css file to the head
+  // note that STEPWISEMATH_ENV is set in https://github.com/StepwiseMath/tutor-indigo-stepwisemath/blob/open-release/redwood.master/tutorindigo/plugin.py#L110
+  // and is implemented as a key in MFE_CONFIG
+  if (cachedEnvironment !== null) {
+    return cachedEnvironment;
+  }
+
+  const url = getConfig().MFE_CONFIG_API_URL;
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, false); // false makes the request synchronous
+    xhr.send(null);
+
+    if (xhr.status === 200) {
+      const data = JSON.parse(xhr.responseText);
+      cachedEnvironment = data.INDIGO_STEPWISEMATH_ENV || 'prod';
+    } else {
+      console.error('Error fetching the URL:', xhr.statusText);
+      cachedEnvironment = 'prod';
+    }
+  } catch (error) {
+    console.error('Error fetching the URL:', error);
+    cachedEnvironment = 'prod';
+  }
+
+  const validEnvironments = ['prod', 'staging', 'dev'];
+  if (!cachedEnvironment.includes(environment)) {
+    console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_ENV` value of "', cachedEnvironment, '" is invalid. Valid values are: ', validEnvironments, '. Defaulting to "prod" environment.');
+  }
+
+  return cachedEnvironment;
+};
+
+
 const LearningHeader = ({
   courseOrg, courseNumber, courseTitle, intl, showUserDropdown,
 }) => {
   const { authenticatedUser } = useContext(AppContext);
 
-  // mcdaniel: add the custom css file to the head
-  // note that STEPWISEMATH_ENV is set in https://github.com/StepwiseMath/tutor-indigo-stepwisemath/blob/open-release/redwood.master/tutorindigo/plugin.py#L110
-  if (!process.env.STEPWISEMATH_ENV) {
-    console.warn('frontend-component-header WARNING: bash variable `STEPWISEMATH_ENV` is not defined. Defaulting to "dev" environment.');
-  } else {
-    const validEnvironments = ['prod', 'staging', 'dev'];
-    if (!validEnvironments.includes(process.env.STEPWISEMATH_ENV)) {
-      console.warn('frontend-component-header WARNING: bash variable `STEPWISEMATH_ENV` value of "', process.env.STEPWISEMATH_ENV, '" is invalid. Valid values are: ', validEnvironments, '. Defaulting to "dev" environment.');
-    }
-  }
-  const environment = process.env.NODE_ENV || 'dev'; 
+  const environment = stepwisemath_environment(); 
   const css_url = `https://swm-openedx-us-${environment}-storage.s3.us-east-2.amazonaws.com/static/css/swpwrxblock.css`;
   console.log('css_url:', css_url);
   useEffect(() => {
