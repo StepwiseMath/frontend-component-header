@@ -58,7 +58,7 @@ const getMfeConfig = () => {
 
 
 const stepwisemath_pwrcss_url = () => {
-  // mcdaniel: add the custom css file to the head
+  // mcdaniel: add Stepwise Power custom css file to the DOM head
   // note that INDIGO_STEPWISEMATH_PWRCSS_URL is set in https://github.com/StepwiseMath/tutor-indigo-stepwisemath/blob/open-release/redwood.master/tutorindigo/plugin.py#L110
   // and is implemented as a key in MFE_CONFIG.
   //
@@ -69,15 +69,10 @@ const stepwisemath_pwrcss_url = () => {
   const mfe_config = getMfeConfig();
   if (!mfe_config || !mfe_config.INDIGO_STEPWISEMATH_PWRCSS_URL) {
     console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_PWRCSS_URL` is undefined.');
+  } else {
+    console.info('caching Stepwise Power custom css url:', cachedCSSUrl);
   };
 
-  cachedCSSUrl = mfe_config.INDIGO_STEPWISEMATH_PWRCSS_URL;
-  const validEnvironments = ['prod', 'staging', 'dev'];
-  if (!cachedMFEConfig.includes(cachedCSSUrl)) {
-    console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_PWRCSS_URL` value of "', cachedCSSUrl, '" is invalid. Valid values are: ', validEnvironments, '.');
-  }
-
-  console.log('caching Stepwise Pwr css url:', cachedCSSUrl);
   return cachedCSSUrl;
 };
 
@@ -88,19 +83,23 @@ const LearningHeader = ({
   const { authenticatedUser } = useContext(AppContext);
 
   const css_url = stepwisemath_pwrcss_url();
-  useEffect(() => {
-    // mount
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = css_url;
-    document.head.appendChild(link);
-    console.info('frontend-component-header: added link to head:', link);
-
-    // unmount
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
+  if (!css_url) {
+    console.warn('frontend-component-header WARNING: css_url is undefined. Skipping adding Stepwise Power custom css to head.');
+  } else {
+    useEffect(() => {
+      // mount
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = css_url;
+      document.head.appendChild(link);
+      console.info('frontend-component-header: added link to head:', link);
+  
+      // unmount
+      return () => {
+        document.head.removeChild(link);
+      };
+    }, []);  
+  }
 
 
   const headerLogo = (
