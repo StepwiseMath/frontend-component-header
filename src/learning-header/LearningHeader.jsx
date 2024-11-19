@@ -70,6 +70,7 @@ const stepwisemath_pwrcss_url = () => {
   if (!mfe_config || !mfe_config.INDIGO_STEPWISEMATH_PWRCSS_URL) {
     console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_PWRCSS_URL` is undefined.');
   } else {
+    cachedCSSUrl = mfe_config.INDIGO_STEPWISEMATH_PWRCSS_URL;
     console.info('caching Stepwise Power custom css url:', cachedCSSUrl);
   };
 
