@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
+import ThemeToggleButton from './ThemeToggleButton';
 
 // Local Components
 import { Menu, MenuTrigger, MenuContent } from './Menu';
@@ -19,31 +20,39 @@ class DesktopHeader extends React.Component {
     super(props);
   }
 
-  renderMainMenu() {
-    const { mainMenu } = this.props;
-
+  renderMenu(menu) {
     // Nodes are accepted as a prop
-    if (!Array.isArray(mainMenu)) {
-      return mainMenu;
+    if (!Array.isArray(menu)) {
+      return menu;
     }
 
-    return mainMenu.map((menuItem) => {
+    return menu.map((menuItem) => {
       const {
         type,
         href,
         content,
         submenuContent,
+        disabled,
+        isActive,
+        onClick,
       } = menuItem;
 
       if (type === 'item') {
         return (
-          <a key={`${type}-${content}`} className="nav-link" href={href}>{content}</a>
+          <a
+            key={`${type}-${content}`}
+            className={`nav-link${disabled ? ' disabled' : ''}${isActive ? ' active' : ''}`}
+            href={href}
+            onClick={onClick || null}
+          >
+            {content}
+          </a>
         );
       }
 
       return (
         <Menu key={`${type}-${content}`} tag="div" className="nav-item" respondToPointerEvents>
-          <MenuTrigger tag="a" className="nav-link d-inline-flex align-items-center" href={href}>
+          <MenuTrigger onClick={onClick || null} tag="a" className="nav-link d-inline-flex align-items-center" href={href}>
             {content} <CaretIcon role="img" aria-hidden focusable="false" />
           </MenuTrigger>
           <MenuContent className="pin-left pin-right shadow py-2">
@@ -54,22 +63,14 @@ class DesktopHeader extends React.Component {
     });
   }
 
-  // Renders an optional App Menu for
-  renderAppMenu() {
-    const { appMenu } = this.props;
-    const { content: appMenuContent, menuItems } = appMenu;
-    return (
-      <Menu transitionClassName="menu-dropdown" transitionTimeout={250}>
-        <MenuTrigger tag="a" className="nav-link d-inline-flex align-items-center">
-          {appMenuContent} <CaretIcon role="img" aria-hidden focusable="false" />
-        </MenuTrigger>
-        <MenuContent className="mb-0 dropdown-menu show dropdown-menu-right pin-right shadow py-2">
-          {menuItems.map(({ type, href, content }) => (
-            <a className={`dropdown-${type}`} key={`${type}-${content}`} href={href}>{content}</a>
-          ))}
-        </MenuContent>
-      </Menu>
-    );
+  renderMainMenu() {
+    const { mainMenu } = this.props;
+    return this.renderMenu(mainMenu);
+  }
+
+  renderSecondaryMenu() {
+    const { secondaryMenu } = this.props;
+    return this.renderMenu(secondaryMenu);
   }
 
   renderUserMenu() {
@@ -91,8 +92,24 @@ class DesktopHeader extends React.Component {
           {username} <CaretIcon role="img" aria-hidden focusable="false" />
         </MenuTrigger>
         <MenuContent className="mb-0 dropdown-menu show dropdown-menu-right pin-right shadow py-2">
-          {userMenu.map(({ type, href, content }) => (
-            <a className={`dropdown-${type}`} key={`${type}-${content}`} href={href}>{content}</a>
+          {userMenu.map((group, index) => (
+            // eslint-disable-next-line react/jsx-no-comment-textnodes,react/no-array-index-key
+            <React.Fragment key={index}>
+              {group.heading && <div className="dropdown-header" role="heading" aria-level="1">{group.heading}</div>}
+              {group.items.map(({
+                type, content, href, disabled, isActive, onClick,
+              }) => (
+                <a
+                  className={`dropdown-${type}${isActive ? ' active' : ''}${disabled ? ' disabled' : ''}`}
+                  key={`${type}-${content}`}
+                  href={href}
+                  onClick={onClick || null}
+                >
+                  {content}
+                </a>
+              ))}
+              {index < userMenu.length - 1 && <div className="dropdown-divider" role="separator" />}
+            </React.Fragment>
           ))}
         </MenuContent>
       </Menu>
@@ -120,7 +137,6 @@ class DesktopHeader extends React.Component {
       logoDestination,
       loggedIn,
       intl,
-      appMenu,
     } = this.props;
     const logoProps = { src: logo, alt: logoAltText, href: logoDestination };
     const logoClasses = getConfig().AUTHN_MINIMAL_HEADER ? 'mw-100' : null;
@@ -137,19 +153,18 @@ class DesktopHeader extends React.Component {
             >
               {this.renderMainMenu()}
             </nav>
-            {appMenu ? (
-              <nav
-                aria-label={intl.formatMessage(messages['header.label.app.nav'])}
-                className="nav app-nav"
-              >
-                {this.renderAppMenu()}
-              </nav>
-            ) : null}
             <nav
               aria-label={intl.formatMessage(messages['header.label.secondary.nav'])}
               className="nav secondary-menu-container align-items-center ml-auto"
             >
-              {loggedIn ? this.renderUserMenu() : this.renderLoggedOutItems()}
+              <div className="mr-3"><ThemeToggleButton /></div>
+              {loggedIn
+                ? (
+                  <>
+                    {this.renderSecondaryMenu()}
+                    {this.renderUserMenu()}
+                  </>
+                ) : this.renderLoggedOutItems()}
             </nav>
           </div>
         </div>
@@ -163,10 +178,19 @@ DesktopHeader.propTypes = {
     PropTypes.node,
     PropTypes.array,
   ]),
+  secondaryMenu: PropTypes.oneOfType([
+    PropTypes.node,
+    PropTypes.array,
+  ]),
   userMenu: PropTypes.arrayOf(PropTypes.shape({
-    type: PropTypes.oneOf(['item', 'menu']),
-    href: PropTypes.string,
-    content: PropTypes.string,
+    heading: PropTypes.string,
+    items: PropTypes.arrayOf(PropTypes.shape({
+      type: PropTypes.oneOf(['item', 'menu']),
+      href: PropTypes.string,
+      content: PropTypes.string,
+      isActive: PropTypes.bool,
+      onClick: PropTypes.func,
+    })),
   })),
   loggedOutItems: PropTypes.arrayOf(PropTypes.shape({
     type: PropTypes.oneOf(['item', 'menu']),
@@ -182,24 +206,11 @@ DesktopHeader.propTypes = {
 
   // i18n
   intl: intlShape.isRequired,
-
-  // appMenu
-  appMenu: PropTypes.shape(
-    {
-      content: PropTypes.string,
-      menuItems: PropTypes.arrayOf(
-        PropTypes.shape({
-          type: PropTypes.string,
-          href: PropTypes.string,
-          content: PropTypes.string,
-        }),
-      ),
-    },
-  ),
 };
 
 DesktopHeader.defaultProps = {
   mainMenu: [],
+  secondaryMenu: [],
   userMenu: [],
   loggedOutItems: [],
   logo: null,
@@ -208,7 +219,6 @@ DesktopHeader.defaultProps = {
   avatar: null,
   username: null,
   loggedIn: false,
-  appMenu: null,
 };
 
 export default injectIntl(DesktopHeader);

@@ -4,6 +4,13 @@ frontend-component-header
 
 |license| |Build Status| |Codecov| |npm_version| |npm_downloads| |semantic-release|
 
+
+This is a fork of `edly-io/frontend-component-header <https://github.com/edly-io/frontend-component-header>`_, itself a fork of `openedx/frontend-component-header <https://github.com/openedx/frontend-component-header>`_.
+Currently the sole reason for this fork is to insert a CSS hook into the DOM, facilitating real-time customizations to the appearance of the "Learning" MFE.
+
+This is a ReactJS component that forms part of the `openedx/frontend-platform <https://github.com/openedx/frontend-platform>`_. The package is published to `@stepwisemath/frontend-component-header <https://www.npmjs.com/package/@stepwisemath/frontend-component-header>`_ and
+is added to the Stepwise Math mfe build via `StepwiseMath/tutor-indigo-stepwisemath <https://github.com/StepwiseMath/tutor-indigo-stepwisemath>`_.
+
 ********
 Purpose
 ********
