@@ -26,14 +26,12 @@ LinkedLogo.propTypes = {
   alt: PropTypes.string.isRequired,
 };
 
-let cachedEnvironment = null;
+let cachedMFEConfig = null;
+let cachedCSSUrl = null;
 
-const stepwisemath_environment = () => {
-  // mcdaniel: add the custom css file to the head
-  // note that STEPWISEMATH_ENV is set in https://github.com/StepwiseMath/tutor-indigo-stepwisemath/blob/open-release/redwood.master/tutorindigo/plugin.py#L110
-  // and is implemented as a key in MFE_CONFIG
-  if (cachedEnvironment !== null) {
-    return cachedEnvironment;
+const getMfeConfig = () => {
+  if (cachedMFEConfig !== null) {
+    return cachedMFEConfig;
   }
 
   const url = getConfig().MFE_CONFIG_API_URL;
@@ -44,25 +42,43 @@ const stepwisemath_environment = () => {
 
     if (xhr.status === 200) {
       const data = JSON.parse(xhr.responseText);
-      if (!data.INDIGO_STEPWISEMATH_ENV) {
-        console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_ENV` is undefined. Defaulting to "prod" environment.');
-      };
-      cachedEnvironment = data.INDIGO_STEPWISEMATH_ENV || 'prod';
+      cachedMFEConfig = data;
     } else {
       console.error('Error fetching the URL:', xhr.statusText);
-      cachedEnvironment = 'prod';
+      cachedMFEConfig = null;
     }
   } catch (error) {
     console.error('Error fetching the URL:', error);
-    cachedEnvironment = 'prod';
+    cachedMFEConfig = null;
   }
 
+  console.log('caching MFE_CONFIG:', cachedMFEConfig);
+  return cachedMFEConfig;
+};
+
+
+const stepwisemath_pwrcss_url = () => {
+  // mcdaniel: add the custom css file to the head
+  // note that INDIGO_STEPWISEMATH_PWRCSS_URL is set in https://github.com/StepwiseMath/tutor-indigo-stepwisemath/blob/open-release/redwood.master/tutorindigo/plugin.py#L110
+  // and is implemented as a key in MFE_CONFIG.
+  //
+  // example return value: https://swm-openedx-us-prod-storage.s3.us-east-2.amazonaws.com/static/css/swpwrxblock.css
+  if (cachedCSSUrl !== null) {
+    return cachedCSSUrl;
+  }
+  const mfe_config = getMfeConfig();
+  if (!mfe_config || !mfe_config.INDIGO_STEPWISEMATH_PWRCSS_URL) {
+    console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_PWRCSS_URL` is undefined.');
+  };
+
+  cachedCSSUrl = mfe_config.INDIGO_STEPWISEMATH_PWRCSS_URL;
   const validEnvironments = ['prod', 'staging', 'dev'];
-  if (!cachedEnvironment.includes(cachedEnvironment)) {
-    console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_ENV` value of "', cachedEnvironment, '" is invalid. Valid values are: ', validEnvironments, '. Defaulting to "prod" environment.');
+  if (!cachedMFEConfig.includes(cachedCSSUrl)) {
+    console.warn('frontend-component-header WARNING: fetched MFE_CONFIG value for `INDIGO_STEPWISEMATH_PWRCSS_URL` value of "', cachedCSSUrl, '" is invalid. Valid values are: ', validEnvironments, '.');
   }
 
-  return cachedEnvironment;
+  console.log('caching Stepwise Pwr css url:', cachedCSSUrl);
+  return cachedCSSUrl;
 };
 
 
@@ -71,9 +87,7 @@ const LearningHeader = ({
 }) => {
   const { authenticatedUser } = useContext(AppContext);
 
-  const environment = stepwisemath_environment(); 
-  const css_url = `https://swm-openedx-us-${environment}-storage.s3.us-east-2.amazonaws.com/static/css/swpwrxblock.css`;
-  console.log('css_url:', css_url);
+  const css_url = stepwisemath_pwrcss_url();
   useEffect(() => {
     // mount
     const link = document.createElement('link');
